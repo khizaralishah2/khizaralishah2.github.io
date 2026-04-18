@@ -53,6 +53,14 @@
       z-index: 0;
     }
 
+    /* ── Canvas for cats ── */
+    #cat-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 3;
+    }
+
     /* ── Noise grain overlay ── */
     body::before {
       content: '';
@@ -443,6 +451,7 @@
 <body>
 
   <canvas id="petal-canvas"></canvas>
+  <canvas id="cat-canvas"></canvas>
   <div class="glow-bg"></div>
 
   <div class="wrapper">
@@ -661,6 +670,256 @@
       requestAnimationFrame(loop);
     }
     loop();
+
+    /* ── Animated Cats ── */
+    (function () {
+      const cc = document.getElementById('cat-canvas');
+      const cx = cc.getContext('2d');
+      let CW, CH;
+
+      function resizeCat() {
+        CW = cc.width = window.innerWidth;
+        CH = cc.height = window.innerHeight;
+      }
+      resizeCat();
+      window.addEventListener('resize', resizeCat);
+
+      const PALETTES = [
+        ['#e8c4b8', '#f5e6e0', '#c0415a'],
+        ['#b8c4d4', '#e8edf5', '#7888aa'],
+        ['#d4a870', '#f5ead0', '#a07038'],
+        ['#c8b0d8', '#ede0f8', '#8060a8'],
+        ['#f0d060', '#faf0c0', '#c08028'],
+        ['#e0e0e0', '#ffffff', '#909090'],
+      ];
+
+      const S = { RUN: 0, SIT: 1, JUMP: 2, MEOW: 3 };
+
+      function makeCat(id) {
+        const pal = PALETTES[id % PALETTES.length];
+        const scale = 0.5 + Math.random() * 0.45;
+        const lane = 0.58 + Math.random() * 0.38;
+        return {
+          id, pal, scale,
+          x: (id / 6) * CW + Math.random() * 80,
+          lane,
+          get y() { return CH * this.lane; },
+          dir: Math.random() < 0.5 ? 1 : -1,
+          speed: (1.5 + Math.random() * 2.2) * scale,
+          state: S.RUN,
+          stateTimer: 0,
+          stateLen: 1500 + Math.random() * 2500,
+          legPhase: Math.random() * Math.PI * 2,
+          tailPhase: Math.random() * Math.PI * 2,
+          jumpY: 0, jumpVY: 0,
+          meowTimer: 0,
+          blinkOffset: Math.random() * 5000,
+        };
+      }
+
+      const NUM = Math.min(6, Math.max(3, Math.floor(window.innerWidth / 200)));
+      const cats = Array.from({ length: NUM }, (_, i) => makeCat(i));
+
+      function drawCat(c, t) {
+        const [body, belly, detail] = c.pal;
+        const sitting = c.state === S.SIT;
+        const { legPhase, tailPhase, jumpY, meowTimer, dir, scale } = c;
+
+        cx.save();
+        cx.translate(c.x, c.y + jumpY);
+        cx.scale(dir * scale, scale);
+
+        // shadow
+        cx.save(); cx.scale(1, 0.15);
+        cx.beginPath();
+        cx.ellipse(2, 130, 26, 9, 0, 0, Math.PI * 2);
+        cx.fillStyle = 'rgba(0,0,0,0.22)'; cx.fill();
+        cx.restore();
+
+        const tailWag = Math.sin(tailPhase) * (sitting ? 55 : 28);
+
+        // tail
+        cx.beginPath();
+        cx.moveTo(-14, sitting ? -24 : -16);
+        cx.bezierCurveTo(-45 + tailWag * 0.3, sitting ? -65 : -38, -65 + tailWag, sitting ? -28 : -18, -54 + tailWag * 1.2, sitting ? 2 : -8);
+        cx.strokeStyle = body; cx.lineWidth = 8; cx.lineCap = 'round'; cx.stroke();
+        cx.beginPath();
+        cx.arc(-54 + tailWag * 1.2, sitting ? 2 : -8, 5.5, 0, Math.PI * 2);
+        cx.fillStyle = detail; cx.globalAlpha = 0.7; cx.fill(); cx.globalAlpha = 1;
+
+        if (!sitting) {
+          // legs
+          const sw = Math.sin(legPhase) * 20;
+          const pairs = [[-10, -8, -8 + sw * 0.5, 32, -4 + sw * 0.5, 44], [10, -6, 6 - sw * 0.4, 30, 2 - sw * 0.4, 42]];
+          pairs.forEach(([ox, oy, x1, y1, x2, y2]) => {
+            cx.beginPath();
+            cx.moveTo(ox, oy); cx.lineTo(x1, y1); cx.lineTo(x2, y2);
+            cx.strokeStyle = body; cx.lineWidth = 7; cx.lineCap = 'round'; cx.stroke();
+            cx.beginPath();
+            cx.moveTo(ox, oy); cx.lineTo(-x1 + ox * 2, y1); cx.lineTo(-x2 + ox * 2, y2);
+            cx.stroke();
+          });
+        } else {
+          // sitting haunches
+          [-14, 14].forEach(ox => {
+            cx.beginPath(); cx.ellipse(ox, 8, 10, 19, ox < 0 ? -0.2 : 0.2, 0, Math.PI * 2);
+            cx.fillStyle = body; cx.fill();
+            cx.beginPath(); cx.ellipse(ox, 24, 10, 6, 0, 0, Math.PI * 2);
+            cx.fillStyle = belly; cx.fill();
+          });
+        }
+
+        // body
+        cx.beginPath();
+        cx.ellipse(0, sitting ? -28 : -18, 22, sitting ? 29 : 19, 0, 0, Math.PI * 2);
+        cx.fillStyle = body; cx.fill();
+        cx.beginPath();
+        cx.ellipse(0, sitting ? -22 : -16, 12, sitting ? 17 : 11, 0, 0, Math.PI * 2);
+        cx.fillStyle = belly; cx.fill();
+
+        // head
+        const hob = c.state === S.RUN ? Math.sin(legPhase * 2) * 2 : 0;
+        cx.save();
+        cx.translate(22, (sitting ? -60 : -42) + hob);
+
+        // ears
+        [[-1, 1], [1, -1]].forEach(([ex, flip]) => {
+          cx.beginPath();
+          cx.moveTo(ex * 8, -16); cx.lineTo(ex * 16, -35); cx.lineTo(ex * (-1), (-26));
+          cx.fillStyle = body; cx.fill();
+          cx.beginPath();
+          cx.moveTo(ex * 8, -18); cx.lineTo(ex * 13, -30); cx.lineTo(ex * (-1), -24);
+          cx.fillStyle = detail; cx.globalAlpha = 0.45; cx.fill(); cx.globalAlpha = 1;
+        });
+
+        // head
+        cx.beginPath(); cx.arc(0, 0, 18, 0, Math.PI * 2);
+        cx.fillStyle = body; cx.fill();
+
+        // markings
+        cx.strokeStyle = detail; cx.globalAlpha = 0.25; cx.lineWidth = 1.5;
+        [[-5, -14, -3, -8], [0, -15, 0, -9], [5, -14, 3, -8]].forEach(([x1, y1, x2, y2]) => {
+          cx.beginPath(); cx.moveTo(x1, y1); cx.lineTo(x2, y2); cx.stroke();
+        });
+        cx.globalAlpha = 1;
+
+        // blink check
+        const bt = (t + c.blinkOffset);
+        const blink = (bt % 4200 < 120);
+
+        if (blink) {
+          cx.beginPath();
+          cx.moveTo(-9, -4); cx.lineTo(-4, -4);
+          cx.moveTo(4, -4); cx.lineTo(9, -4);
+          cx.strokeStyle = '#1a0810'; cx.lineWidth = 2.5; cx.lineCap = 'round'; cx.stroke();
+        } else {
+          [-6, 6].forEach(ex => {
+            cx.beginPath(); cx.ellipse(ex, -4, 5, 5.5, 0, 0, Math.PI * 2);
+            cx.fillStyle = '#fff'; cx.fill();
+            cx.beginPath(); cx.ellipse(ex, -4, 1.8, 3.8, 0, 0, Math.PI * 2);
+            cx.fillStyle = '#120810'; cx.fill();
+            cx.beginPath(); cx.arc(ex - 1, -5.5, 1.3, 0, Math.PI * 2);
+            cx.fillStyle = 'rgba(255,255,255,0.85)'; cx.fill();
+          });
+        }
+
+        // nose
+        cx.beginPath(); cx.moveTo(-3, 4); cx.lineTo(3, 4); cx.lineTo(0, 7);
+        cx.fillStyle = detail; cx.fill();
+
+        // mouth
+        cx.beginPath();
+        cx.moveTo(0, 7); cx.bezierCurveTo(-5, 12, -8, 13, -9, 11);
+        cx.moveTo(0, 7); cx.bezierCurveTo(5, 12, 8, 13, 9, 11);
+        cx.strokeStyle = detail; cx.lineWidth = 1.5; cx.globalAlpha = 0.6; cx.stroke(); cx.globalAlpha = 1;
+
+        // whiskers
+        cx.strokeStyle = 'rgba(240,220,200,0.65)'; cx.lineWidth = 1;
+        [[-1, 1], [0, 2], [1, -1]].forEach(([a, b]) => {
+          cx.beginPath(); cx.moveTo(-2, 4 + b * 0.3); cx.lineTo(-22, 1 + a * 2.5); cx.stroke();
+          cx.beginPath(); cx.moveTo(2, 4 + b * 0.3); cx.lineTo(22, 1 + a * 2.5); cx.stroke();
+        });
+
+        // meow bubble
+        if (c.state === S.MEOW && meowTimer > 0) {
+          cx.save();
+          cx.scale(1 / dir, 1);
+          const bw = 55, bh = 26, bx = 14, by = -46;
+          cx.beginPath(); cx.roundRect(bx, by, bw, bh, 8);
+          cx.fillStyle = 'rgba(255,242,248,0.95)'; cx.fill();
+          cx.strokeStyle = detail; cx.lineWidth = 1.5; cx.stroke();
+          cx.beginPath();
+          cx.moveTo(bx + 8, by + bh); cx.lineTo(bx + 2, by + bh + 10); cx.lineTo(bx + 20, by + bh);
+          cx.fillStyle = 'rgba(255,242,248,0.95)'; cx.fill();
+          cx.strokeStyle = detail; cx.lineWidth = 1.2; cx.stroke();
+          cx.fillStyle = '#4a1020';
+          cx.font = `bold ${11 / scale}px 'Cormorant Garamond',serif`;
+          cx.textAlign = 'center'; cx.textBaseline = 'middle';
+          cx.fillText('meow ♡', bx + bw / 2, by + bh / 2);
+          cx.restore();
+        }
+
+        cx.restore(); // head
+        cx.restore(); // cat transform
+      }
+
+      function nextState(c) {
+        const r = Math.random();
+        if (r < 0.55) return S.RUN;
+        if (r < 0.72) return S.SIT;
+        if (r < 0.86) return S.JUMP;
+        return S.MEOW;
+      }
+
+      function updateCat(c, dt) {
+        c.legPhase += dt * 0.013 * (c.state === S.RUN ? 1 : 0.25);
+        c.tailPhase += dt * 0.006;
+        c.stateTimer += dt;
+
+        if (c.stateTimer >= c.stateLen) {
+          const prev = c.state;
+          c.state = nextState(c);
+          c.stateTimer = 0;
+          c.stateLen = 1000 + Math.random() * 3000;
+          if (c.state === S.JUMP && c.jumpY === 0) {
+            c.jumpVY = -(4.5 + Math.random() * 3) * c.scale;
+          }
+          if (c.state === S.MEOW) {
+            c.meowTimer = 2400;
+            c.stateLen = 2400;
+          }
+          // random direction flip on new RUN
+          if (c.state === S.RUN && Math.random() < 0.35) c.dir *= -1;
+        }
+
+        // jump physics
+        if (c.jumpVY < 0 || c.jumpY < 0) {
+          c.jumpVY += dt * 0.02 * c.scale;
+          c.jumpY += c.jumpVY;
+          if (c.jumpY >= 0) { c.jumpY = 0; c.jumpVY = 0; if (c.state === S.JUMP) c.state = S.RUN; }
+        }
+
+        if (c.state === S.MEOW) c.meowTimer -= dt;
+
+        if (c.state === S.RUN || c.state === S.JUMP) {
+          c.x += c.dir * c.speed * (dt / 16);
+        }
+
+        const margin = 70 * c.scale;
+        if (c.x > CW + margin) c.x = -margin;
+        if (c.x < -margin) c.x = CW + margin;
+      }
+
+      let lastCT = 0;
+      function catLoop(t) {
+        const dt = Math.min(t - lastCT, 50);
+        lastCT = t;
+        cx.clearRect(0, 0, CW, CH);
+        cats.forEach(c => { updateCat(c, dt); drawCat(c, t); });
+        requestAnimationFrame(catLoop);
+      }
+      requestAnimationFrame(catLoop);
+    })();
 
     /* ── Scroll reveal ── */
     const reveals = document.querySelectorAll('.reveal');
