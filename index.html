@@ -378,6 +378,280 @@
       font-weight: 600;
     }
 
+    /* ── Music Player ── */
+    .player-section {
+      padding: 4rem 0 2rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .player-card {
+      width: 100%;
+      max-width: 520px;
+      background: linear-gradient(145deg, rgba(30, 10, 15, 0.95), rgba(18, 6, 10, 0.98));
+      border: 1px solid rgba(212, 169, 106, 0.25);
+      border-radius: 20px;
+      padding: 2rem 2.2rem 1.8rem;
+      box-shadow: 0 8px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(20px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .player-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 30% 0%, rgba(192, 65, 90, 0.1) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .player-song-info {
+      display: flex;
+      align-items: center;
+      gap: 1.1rem;
+      margin-bottom: 1.6rem;
+    }
+
+    .player-disc {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: conic-gradient(#c0415a 0deg, #8a1a30 60deg, #d4a96a 120deg,
+          #2a0810 180deg, #c0415a 240deg, #8a1a30 300deg, #c0415a 360deg);
+      flex-shrink: 0;
+      position: relative;
+      box-shadow: 0 0 20px rgba(192, 65, 90, 0.3);
+      transition: transform 0.3s;
+    }
+
+    .player-disc::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #0d0608;
+      border: 2px solid rgba(212, 169, 106, 0.4);
+    }
+
+    .player-disc.spinning {
+      animation: spin 4s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .player-song-text {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .player-song-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      color: var(--gold-lt);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player-song-artist {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.82rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      margin-top: 0.2rem;
+    }
+
+    /* waveform bars */
+    .player-wave {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 28px;
+      margin-bottom: 1.4rem;
+    }
+
+    .player-wave-bar {
+      flex: 1;
+      background: linear-gradient(to top, var(--rose), var(--gold));
+      border-radius: 2px;
+      opacity: 0.5;
+      transform-origin: bottom;
+      transition: opacity 0.3s;
+      height: 4px;
+    }
+
+    .player-wave.active .player-wave-bar {
+      opacity: 1;
+      animation: waveBar 0.9s ease-in-out infinite alternate;
+    }
+
+    @keyframes waveBar {
+      from {
+        transform: scaleY(var(--min, 0.2));
+      }
+
+      to {
+        transform: scaleY(var(--max, 1));
+      }
+    }
+
+    /* progress bar */
+    .player-progress-wrap {
+      position: relative;
+      margin-bottom: 0.5rem;
+    }
+
+    .player-progress {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .player-progress::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 8px rgba(212, 169, 106, 0.6);
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .player-progress::-webkit-slider-thumb:hover {
+      transform: scale(1.3);
+    }
+
+    .player-progress::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--gold);
+      border: none;
+      cursor: pointer;
+    }
+
+    .player-times {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-family: 'Cormorant Garamond', serif;
+      letter-spacing: 0.05em;
+      margin-top: 0.4rem;
+      margin-bottom: 1.2rem;
+    }
+
+    /* controls */
+    .player-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.6rem;
+      margin-bottom: 1.4rem;
+    }
+
+    .player-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 1.1rem;
+      padding: 0.3rem;
+      transition: color 0.2s, transform 0.2s;
+      line-height: 1;
+    }
+
+    .player-btn:hover {
+      color: var(--gold-lt);
+      transform: scale(1.15);
+    }
+
+    .player-play {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--rose), #8a1a30);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(192, 65, 90, 0.45);
+      transition: transform 0.2s, box-shadow 0.2s;
+      color: white;
+      font-size: 1.3rem;
+    }
+
+    .player-play:hover {
+      transform: scale(1.08);
+      box-shadow: 0 6px 28px rgba(192, 65, 90, 0.6);
+    }
+
+    /* volume */
+    .player-volume-row {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+    }
+
+    .vol-icon {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .player-volume {
+      -webkit-appearance: none;
+      appearance: none;
+      flex: 1;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .player-volume::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: var(--rose-soft);
+      cursor: pointer;
+    }
+
+    .player-volume::-moz-range-thumb {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: var(--rose-soft);
+      border: none;
+      cursor: pointer;
+    }
+
+    .player-note {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 0.7rem;
+      color: rgba(160, 136, 128, 0.5);
+      letter-spacing: 0.08em;
+    }
+
     /* ── Closing ── */
     .footer-section {
       padding: 4rem 0 6rem;
@@ -477,6 +751,53 @@
       <div class="scroll-hint">
         <span>scroll</span>
         <div class="scroll-arrow"></div>
+      </div>
+    </section>
+
+    <!-- MUSIC PLAYER -->
+    <section class="player-section reveal">
+      <div class="player-card">
+        <div class="player-song-info">
+          <div class="player-disc" id="disc"></div>
+          <div class="player-song-text">
+            <div class="player-song-title">Rebel Heart</div>
+            <div class="player-song-artist">IVE &nbsp;·&nbsp; Her favourite song</div>
+          </div>
+        </div>
+
+        <!-- waveform -->
+        <div class="player-wave" id="playerWave">
+          <!-- bars injected by JS -->
+        </div>
+
+        <!-- progress -->
+        <div class="player-progress-wrap">
+          <input type="range" class="player-progress" id="progressBar" min="0" max="100" value="0" step="0.1">
+        </div>
+        <div class="player-times">
+          <span id="timeCurrent">0:00</span>
+          <span id="timeDuration">0:00</span>
+        </div>
+
+        <!-- controls -->
+        <div class="player-controls">
+          <button class="player-btn" id="btnRewind" title="Rewind 10s">⏮</button>
+          <button class="player-play" id="btnPlay" title="Play / Pause">▶</button>
+          <button class="player-btn" id="btnForward" title="Forward 10s">⏭</button>
+        </div>
+
+        <!-- volume -->
+        <div class="player-volume-row">
+          <span class="vol-icon" id="volIcon">🔈</span>
+          <input type="range" class="player-volume" id="volumeBar" min="0" max="1" step="0.01" value="0.8">
+        </div>
+
+        <p class="player-note">Add <code style="color:var(--rose-soft)">song.mp3</code> to your repo root to enable
+          playback</p>
+
+        <audio id="audioEl" preload="metadata">
+          <source src="song.mp3" type="audio/mpeg">
+        </audio>
       </div>
     </section>
 
@@ -670,6 +991,92 @@
       requestAnimationFrame(loop);
     }
     loop();
+
+    /* ── Audio Player ── */
+    (function () {
+      const audio = document.getElementById('audioEl');
+      const btnPlay = document.getElementById('btnPlay');
+      const btnRew = document.getElementById('btnRewind');
+      const btnFwd = document.getElementById('btnForward');
+      const progress = document.getElementById('progressBar');
+      const volBar = document.getElementById('volumeBar');
+      const volIcon = document.getElementById('volIcon');
+      const timeCur = document.getElementById('timeCurrent');
+      const timeDur = document.getElementById('timeDuration');
+      const disc = document.getElementById('disc');
+      const wave = document.getElementById('playerWave');
+
+      // build waveform bars
+      const NUM_BARS = 28;
+      for (let i = 0; i < NUM_BARS; i++) {
+        const b = document.createElement('div');
+        b.className = 'player-wave-bar';
+        const mn = 0.15 + Math.random() * 0.25;
+        const mx = 0.55 + Math.random() * 0.45;
+        b.style.setProperty('--min', mn);
+        b.style.setProperty('--max', mx);
+        b.style.animationDelay = (Math.random() * 0.8) + 's';
+        b.style.animationDuration = (0.55 + Math.random() * 0.6) + 's';
+        wave.appendChild(b);
+      }
+
+      function fmt(s) {
+        const m = Math.floor(s / 60);
+        const ss = Math.floor(s % 60).toString().padStart(2, '0');
+        return m + ':' + ss;
+      }
+
+      function setProgress() {
+        const pct = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
+        progress.value = pct;
+        // fill track with gradient
+        progress.style.background =
+          `linear-gradient(to right, var(--rose) 0%, var(--gold) ${pct}%, rgba(255,255,255,0.08) ${pct}%)`;
+        timeCur.textContent = fmt(audio.currentTime);
+      }
+
+      audio.addEventListener('loadedmetadata', () => {
+        timeDur.textContent = fmt(audio.duration);
+      });
+      audio.addEventListener('timeupdate', setProgress);
+      audio.addEventListener('ended', () => {
+        btnPlay.textContent = '▶';
+        disc.classList.remove('spinning');
+        wave.classList.remove('active');
+      });
+
+      let playing = false;
+      btnPlay.addEventListener('click', () => {
+        if (playing) {
+          audio.pause();
+          btnPlay.textContent = '▶';
+          disc.classList.remove('spinning');
+          wave.classList.remove('active');
+        } else {
+          audio.play().catch(() => { });
+          btnPlay.textContent = '⏸';
+          disc.classList.add('spinning');
+          wave.classList.add('active');
+        }
+        playing = !playing;
+      });
+
+      btnRew.addEventListener('click', () => { audio.currentTime = Math.max(0, audio.currentTime - 10); });
+      btnFwd.addEventListener('click', () => { audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + 10); });
+
+      progress.addEventListener('input', () => {
+        if (audio.duration) audio.currentTime = (progress.value / 100) * audio.duration;
+      });
+
+      audio.volume = parseFloat(volBar.value);
+      volBar.addEventListener('input', () => {
+        audio.volume = parseFloat(volBar.value);
+        volIcon.textContent = audio.volume === 0 ? '🔇' : audio.volume < 0.5 ? '🔈' : '🔊';
+      });
+
+      // initial fill
+      progress.style.background = 'rgba(255,255,255,0.08)';
+    })();
 
     /* ── Animated Cats ── */
     (function () {
